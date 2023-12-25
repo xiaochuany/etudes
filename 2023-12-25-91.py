@@ -1,10 +1,9 @@
 import string
 
 def numDecodings(s: str) -> int:
-        ctoi = {c:str(i+1) for i,c in enumerate(string.ascii_uppercase)}
-        itoc = {i:c for c,i in ctoi.items()}        
+        itoc = {str(i+1):c for i,c in enumerate(string.ascii_uppercase)}   
         if len(s)<=1: return int(s in itoc)
-
+        
         # init first two values
         dp = [0]*len(s)
         dp[0] = 1 if s[0] in itoc else 0
