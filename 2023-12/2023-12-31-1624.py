@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 def max_word(s: str) -> int:
+    """compute the longest word length between equal characters, return -1 if non existing"""
     res = -1
     dd = defaultdict(list)
     for i,c in enumerate(s):
