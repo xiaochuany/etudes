@@ -4,6 +4,7 @@ from collections import Counter
 from typing import List
 
 def make_equal(words:List[str])->bool:
+    """make a list of words equal, arbitrary number of operations allowed"""
     return all(v%len(words)==0 for v in Counter(chain(*words)).values())
 
 class TestMakeEqual:
