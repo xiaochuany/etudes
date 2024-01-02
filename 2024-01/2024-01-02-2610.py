@@ -5,6 +5,7 @@ from collections import Counter
 from typing import List
 
 def find_matrix(nums:List[int])-> List[List[int]]:
+    """turn nums into 2d array, each row contains distinct numbers"""
     c = [[k]*v for k,v in Counter(nums).items()]
     res = []
     for row in zip_longest(*c):
