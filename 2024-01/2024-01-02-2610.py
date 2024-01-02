@@ -1,6 +1,6 @@
 #2024-01-02-2610
 
-from itertools import zip_longest
+from itertools import zip_longest, chain
 from collections import Counter
 from typing import List
 
@@ -26,3 +26,7 @@ class TestFindMatrix:
     def test_distinct(self):
         for x in [self.x0,self.x1]:
             assert all([len(set(row))==len(row) for row in x])
+
+    def test_equal(self):
+        for x,n in zip([self.x0,self.x1],[self.nums0,self.nums1]):
+            assert sorted(list(chain(*x)))==sorted(n)
