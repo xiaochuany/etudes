@@ -3,6 +3,7 @@ from typing import List
 
 # %%
 def number_beams(bank: List[str]) -> int:
+    """two laser devices make beam iff i) not same row ii) no devices at all in any row in between"""
     rs = []
     for row in bank:
         if (a:=row.count('1')): rs.append(a)
