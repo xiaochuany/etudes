@@ -6,6 +6,7 @@ def get_stats(s:str):
     return count
 
 def encode(ids, merges):
+    # INCORRECT IMPLEMENTATION
     i = 0
     t = None
     new_ids = []
@@ -26,4 +27,4 @@ def encode(ids, merges):
 
 print(get_stats('abbabc'))
 
-print(encode([1,2,1,5,1,8,8,1,5], {(1,5):8, (8,1):9}))
+print('OK' if encode([1,2,1,5,1,8,8,1,5], {(1,5):8, (8,1):9})==[1,2,9,8,9,5] else 'Fail')
