@@ -1,1 +1,3 @@
-solve exercises in algorithm and data structure
+# exercise
+
+solve light-weighted exercises in algorithm, data structure, data engineering, and machine learning
