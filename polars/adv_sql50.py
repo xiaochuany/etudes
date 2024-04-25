@@ -76,7 +76,7 @@ def evaluate_expression(expressions, variables):
 # print(evaluate_expression(expressions, variables))
 
 #------------------------------------------------------------
-#1212 team scores in football tournament
+#1212** team scores in football tournament
 
 data = [[10, 'Leetcode FC'], [20, 'NewYork FC'], [30, 'Atlanta FC'], [40, 'Chicago FC'], [50, 'Toronto FC']]
 teams = pd.DataFrame(data, columns=['team_id', 'team_name']).astype({'team_id':'Int64', 'team_name':'object'}).pipe(to_polars)
@@ -84,8 +84,17 @@ data = [[1, 10, 20, 3, 0], [2, 30, 10, 2, 2], [3, 10, 50, 5, 1], [4, 20, 30, 1, 
 matches = pd.DataFrame(data, columns=['match_id', 'host_team', 'guest_team', 'host_goals', 'guest_goals']).astype({'match_id':'Int64', 'host_team':'Int64', 'guest_team':'Int64', 'host_goals':'Int64', 'guest_goals':'Int64'}).pipe(to_polars)
 
 def team_scores(teams, matches):
-    print(teams, matches)
-    x = matches.select("match_id","host_goals", "guest_goals").melt(id_vars=["match_id"], value_vars=["host_goals", "guest_goals"])
-    return x
+    def compute_points(col1, col2):
+        """win 3 draw 1 lose 0"""
+        return pl.when(col1 > col2).then(3).when(col1 == col2).then(1).otherwise(0)
+    
+    col1, col2 = pl.col("host_goals"), pl.col("guest_goals")
+    x = (matches.lazy().with_columns(
+            compute_points(col1, col2).alias("home_points"), 
+            compute_points(col2, col1).alias("guest_points")))
+    cat = pl.concat([x.select("host_team", "home_points").rename({"host_team":"team_id", "home_points":"points"}), 
+               x.select("guest_team", "guest_points").rename({"guest_team":"team_id", "guest_points":"points"})])
+    q = cat.group_by("team_id").agg(pl.sum("points")).join(teams.lazy(), on = "team_id").select("team_name", "points").sort(by="points", descending=True)
+    return q.collect()
 
-print(team_scores(teams, matches))
+# print(team_scores(teams, matches))
