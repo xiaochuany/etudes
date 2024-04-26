@@ -134,3 +134,22 @@ def apples_oranges(sales):
     return q
 
 # print(apples_oranges(sales))
+
+#------------------------------------------------------------
+#1699** number of calls between two persons
+#TODO: cast back and forth between List and Array is not amazing (had to do this because arr.sort expects Array, and group_by expects List), find a better way
+
+data = [[1, 2, 59], [2, 1, 11], [1, 3, 20], [3, 4, 100], [3, 4, 200], [3, 4, 200], [4, 3, 499]]
+calls = pd.DataFrame(data, columns=['from_id', 'to_id', 'duration']).astype({'from_id':'Int64', 'to_id':'Int64', 'duration':'Int64'}).pipe(to_polars)
+
+def number_of_calls(calls):
+    q = (
+        calls
+        .with_columns(callers = pl.concat_list(pl.all().exclude("duration")).cast(pl.Array(pl.Int64,2)))
+        .with_columns(pl.col("callers").arr.sort().cast(pl.List(pl.Int64)))
+        .group_by("callers").agg(pl.sum("duration"))
+        .select("callers", "duration")
+    )
+    return q
+
+# print(number_of_calls(calls))
