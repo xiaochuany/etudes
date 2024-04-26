@@ -98,3 +98,39 @@ def team_scores(teams, matches):
     return q.collect()
 
 # print(team_scores(teams, matches))
+
+#------------------------------------------------------------
+#1517* warehouse manager
+
+data = [['LCHouse1', 1, 1], ['LCHouse1', 2, 10], ['LCHouse1', 3, 5], ['LCHouse2', 1, 2], ['LCHouse2', 2, 2], ['LCHouse3', 4, 1]]
+warehouse = pd.DataFrame(data, columns=['name', 'product_id', 'units']).astype({'name':'object', 'product_id':'Int64', 'units':'Int64'}).pipe(to_polars)
+data = [[1, 'LC-TV', 5, 50, 40], [2, 'LC-KeyChain', 5, 5, 5], [3, 'LC-Phone', 2, 10, 10], [4, 'LC-T-Shirt', 4, 10, 20]]
+products = pd.DataFrame(data, columns=['product_id', 'product_name', 'Width', 'Length', 'Height']).astype({'product_id':'Int64', 'product_name':'object', 'Width':'Int64', 'Length':'Int64', 'Height':'Int64'}).pipe(to_polars)
+
+def warehouse_manager(warehouse, products):
+    q = (
+        warehouse.lazy()
+        .join(products.lazy(), on="product_id")
+        .with_columns(pl.fold(acc=pl.lit(1), function=lambda acc, x: acc*x, exprs=[pl.col("Width", "Length", "Height", "units")]).alias("vol"))
+        .group_by("name").agg(pl.sum("vol"))
+        .sort(by="name")
+    )
+    return q.collect()
+
+# print(warehouse_manager(warehouse, products))
+
+#------------------------------------------------------------
+#1445** Apples and Oranges
+
+data = [['2020-05-01', 'apples', 10], ['2020-05-01', 'oranges', 8], ['2020-05-02', 'apples', 15], ['2020-05-02', 'oranges', 15], ['2020-05-03', 'apples', 20], ['2020-05-03', 'oranges', 0], ['2020-05-04', 'apples', 15], ['2020-05-04', 'oranges', 16]]
+sales = pd.DataFrame(data, columns=['sale_date', 'fruit', 'sold_num']).astype({'sale_date':'datetime64[ns]', 'fruit':'object', 'sold_num':'Int64'}).pipe(to_polars)
+
+def apples_oranges(sales):
+    q = (
+        sales.with_columns(pl.col("sale_date").cast(pl.Date))
+        .pivot(index="sale_date", columns="fruit", values="sold_num")
+        .select(pl.first(), pl.reduce(lambda x,y:x-y, exprs=pl.col("*").exclude("sale_date")).alias("diff"))
+    )
+    return q
+
+# print(apples_oranges(sales))
