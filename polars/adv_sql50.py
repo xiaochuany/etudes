@@ -151,3 +151,60 @@ def number_of_calls(calls):
     return q
 
 # print(number_of_calls(calls))
+
+#------------------------------------------------------------
+#1501** countries you safely invest in
+
+data = [[3, 'Jonathan', '051-1234567'], [12, 'Elvis', '051-7654321'], [1, 'Moncef', '212-1234567'], [2, 'Maroua', '212-6523651'], [7, 'Meir', '972-1234567'], [9, 'Rachel', '972-0011100']]
+person = pd.DataFrame(data, columns=['id', 'name', 'phone_number']).astype({'id':'Int64', 'name':'object', 'phone_number':'object'}).pipe(to_polars)
+data = [['Peru', '051'], ['Israel', '972'], ['Morocco', '212'], ['Germany', '049'], ['Ethiopia', '251']]
+country = pd.DataFrame(data, columns=['name', 'country_code']).astype({'name':'object', 'country_code':'object'}).pipe(to_polars)
+data = [[1, 9, 33], [2, 9, 4], [1, 2, 59], [3, 12, 102], [3, 12, 330], [12, 3, 5], [7, 9, 13], [7, 1, 3], [9, 7, 1], [1, 7, 7]]
+calls = pd.DataFrame(data, columns=['caller_id', 'callee_id', 'duration']).astype({'caller_id':'Int64', 'callee_id':'Int64', 'duration':'Int64'}).pipe(to_polars)
+
+def countries_to_invest(person, country, calls):
+    q = (
+        pl.concat(
+            [calls.lazy().select(pl.first(),"duration").rename({"caller_id":"id"}),
+            calls.lazy().select("callee_id", "duration").rename({"callee_id":"id"})]
+    ).join(
+        person.lazy().select(
+            "id",
+            pl.col("phone_number").str.slice(0,3).alias("country_code")
+        ),
+        on="id"
+    ).with_columns(globl=pl.col("duration").mean())
+    .group_by("country_code").agg(pl.mean("duration"), pl.mean("globl"))
+    .filter(pl.col("duration")>pl.col("globl"))
+    .join(country.lazy(), on="country_code")
+    .select("name")
+    )
+    return q.collect()
+
+# print(countries_to_invest(person, country, calls))
+
+#------------------------------------------------------------
+#1264** page recommendations
+
+data = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [2, 5], [6, 1]]
+friendship = pd.DataFrame(data, columns=['user1_id', 'user2_id']).astype({'user1_id':'Int64', 'user2_id':'Int64'}).pipe(to_polars)
+data = [[1, 88], [2, 23], [3, 24], [4, 56], [5, 11], [6, 33], [2, 77], [3, 77], [6, 88]]
+likes = pd.DataFrame(data, columns=['user_id', 'page_id']).astype({'user_id':'Int64', 'page_id':'Int64'}).pipe(to_polars)
+
+def page_recommendations(friendship, likes):
+    q = (
+        friendship
+        .with_columns(
+            friend = pl.when(pl.col("user1_id")==1).then(pl.col("user2_id"))
+            .when(pl.col("user2_id")==1).then(pl.col("user1_id"))
+            .otherwise(None)
+            )
+        .drop_nulls()
+        )
+    q2 = likes.filter(
+        pl.col("user_id").is_in(q.select("friend")) &
+        pl.col("page_id").is_in(likes.filter(pl.col("user_id")==1).select("page_id")).not_()
+    ).select(pl.col("page_id").alias("recommended_page_id")).unique()
+    return q2 
+
+print(page_recommendations(friendship, likes))
