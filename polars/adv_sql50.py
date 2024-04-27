@@ -207,4 +207,80 @@ def page_recommendations(friendship, likes):
     ).select(pl.col("page_id").alias("recommended_page_id")).unique()
     return q2 
 
-print(page_recommendations(friendship, likes))
+# print(page_recommendations(friendship, likes))
+
+#------------------------------------------------------------
+#608** tree node
+
+data = [[1, None], [2, 1], [3, 1], [4, 2], [5, 2]]
+tree = pd.DataFrame(data, columns=['id', 'p_id']).astype({'id':'Int64', 'p_id':'Int64'}).pipe(to_polars)
+
+def tree_node(tree):
+    q = (
+        tree
+        .with_columns(
+            root=pl.col("p_id").is_null(),
+            is_parent=pl.col("id").is_in("p_id")
+        )
+        .with_columns(type=pl.col("root")+pl.col("is_parent"))
+        .select(
+            "id",
+            pl.when(pl.col("type")==2).then(pl.lit("Root")).when(pl.col("type")==1).then(pl.lit("Inner")).otherwise(pl.lit("Leaf"))
+        )
+    )
+    return q
+
+# print(tree_node(tree))
+
+#------------------------------------------------------------
+#534** game play analysis III
+
+data = [[1, 2, '2016-03-01', 5], [1, 2, '2016-05-02', 6], [1, 3, '2017-06-25', 1], [3, 1, '2016-03-02', 0], [3, 4, '2018-07-03', 5]]
+activity = pd.DataFrame(data, columns=['player_id', 'device_id', 'event_date', 'games_played']).astype({'player_id':'Int64', 'device_id':'Int64', 'event_date':'datetime64[ns]', 'games_played':'Int64'}).pipe(to_polars)
+
+def game_play_analysis(activity):
+    q = (
+        activity
+        .group_by("player_id","event_date").agg(pl.sum("games_played"))
+        .sort(by=["player_id", "event_date"])
+        .with_columns(
+            pl.col("games_played").cum_sum().over("player_id").alias("games_played_so_far"),
+            pl.col("event_date").dt.date()
+        )
+    )
+    return q
+
+# print(game_play_analysis(activity))
+
+#------------------------------------------------------------
+#1783** grand slam titles
+
+data = [[1, 'Nadal'], [2, 'Federer'], [3, 'Novak']]
+players = pd.DataFrame(data, columns=['player_id', 'player_name']).astype({'player_id':'Int64', 'player_name':'object'}).pipe(to_polars)
+data = [[2018, 1, 1, 1, 1], [2019, 1, 1, 2, 2], [2020, 2, 1, 2, 2]]
+championships = pd.DataFrame(data, columns=['year', 'Wimbledon', 'Fr_open', 'US_open', 'Au_open']).astype({'year':'Int64', 'Wimbledon':'Int64', 'Fr_open':'Int64', 'US_open':'Int64', 'Au_open':'Int64'}).pipe(to_polars)
+
+def grand_slam_titles(players, championships):
+    q=(
+        championships
+        .melt(id_vars="year",value_vars=["Wimbledon", "Fr_open", "US_open", "Au_open"], variable_name="tournament", value_name="player_id")
+        .group_by("player_id").agg(pl.col("tournament").count())
+        .join(players, on="player_id")
+    )
+    return q
+
+# print(grand_slam_titles(players, championships))
+
+#------------------------------------------------------------
+#1747** leetflex banned account
+#TODO: complete the query
+data = [[1, 1, '2021-02-01 09:00:00', '2021-02-01 09:30:00'], [1, 2, '2021-02-01 08:00:00', '2021-02-01 11:30:00'], [2, 6, '2021-02-01 20:30:00', '2021-02-01 22:00:00'], [2, 7, '2021-02-02 20:30:00', '2021-02-02 22:00:00'], [3, 9, '2021-02-01 16:00:00', '2021-02-01 16:59:59'], [3, 13, '2021-02-01 17:00:00', '2021-02-01 17:59:59'], [4, 10, '2021-02-01 16:00:00', '2021-02-01 17:00:00'], [4, 11, '2021-02-01 17:00:00', '2021-02-01 17:59:59']]
+log_info = pd.DataFrame(data, columns=['account_id', 'ip_address', 'login', 'logout']).astype({'account_id':'Int64', 'ip_address':'Int64', 'login':'datetime64[ns]', 'logout':'datetime64[ns]'}).pipe(to_polars)
+
+def banned_account(log_info):
+    q =(
+        log_info.join(log_info,how="cross")
+    )
+    return q
+
+print(banned_account(log_info))
