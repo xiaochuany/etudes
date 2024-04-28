@@ -273,14 +273,21 @@ def grand_slam_titles(players, championships):
 
 #------------------------------------------------------------
 #1747** leetflex banned account
-#TODO: complete the query
+
 data = [[1, 1, '2021-02-01 09:00:00', '2021-02-01 09:30:00'], [1, 2, '2021-02-01 08:00:00', '2021-02-01 11:30:00'], [2, 6, '2021-02-01 20:30:00', '2021-02-01 22:00:00'], [2, 7, '2021-02-02 20:30:00', '2021-02-02 22:00:00'], [3, 9, '2021-02-01 16:00:00', '2021-02-01 16:59:59'], [3, 13, '2021-02-01 17:00:00', '2021-02-01 17:59:59'], [4, 10, '2021-02-01 16:00:00', '2021-02-01 17:00:00'], [4, 11, '2021-02-01 17:00:00', '2021-02-01 17:59:59']]
 log_info = pd.DataFrame(data, columns=['account_id', 'ip_address', 'login', 'logout']).astype({'account_id':'Int64', 'ip_address':'Int64', 'login':'datetime64[ns]', 'logout':'datetime64[ns]'}).pipe(to_polars)
 
 def banned_account(log_info):
     q =(
-        log_info.join(log_info,how="cross")
+        log_info.lazy().join(log_info.lazy(),how="cross")
+        .filter(
+            (pl.col("account_id")==pl.col("account_id_right")) &
+            (pl.col("ip_address")!=pl.col("ip_address_right")) &
+            (pl.col("login_right")<=pl.col("logout")) &
+            (pl.col("logout_right")>=pl.col("login"))
+        )
+        .select("account_id").unique()
     )
-    return q
+    return q.collect()
 
-print(banned_account(log_info))
+# print(banned_account(log_info))
