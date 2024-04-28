@@ -291,3 +291,26 @@ def banned_account(log_info):
     return q.collect()
 
 # print(banned_account(log_info))
+
+#------------------------------------------------------------
+#184** department highest salary
+
+data = [[1, 'Joe', 70000, 1], [2, 'Jim', 90000, 1], [3, 'Henry', 80000, 2], [4, 'Sam', 60000, 2], [5, 'Max', 90000, 1]]
+employee = pd.DataFrame(data, columns=['id', 'name', 'salary', 'departmentId']).astype({'id':'Int64', 'name':'object', 'salary':'Int64', 'departmentId':'Int64'}).pipe(to_polars)
+data = [[1, 'IT'], [2, 'Sales']]
+department = pd.DataFrame(data, columns=['id', 'name']).astype({'id':'Int64', 'name':'object'}).pipe(to_polars)
+
+def department_highest_salary(employee, department):
+    q = (
+        employee
+        .with_columns(
+            pl.col("salary").max().over("departmentId").alias("max_salary")
+        )
+        .filter(pl.col("max_salary")==pl.col("salary"))
+        .join(department, left_on="departmentId", right_on="id")
+        .rename({"name_right":"department"})
+        .select("name","department","salary")
+    )
+    return q
+
+# print(department_highest_salary(employee, department))
