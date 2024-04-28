@@ -1,5 +1,5 @@
-"""pipe pandas dataframe to polars dataframe, then use polars to solve queries
-selected problems from leetcode 50 advanced sql problems
+"""pipe pandas dataframe to polars dataframe
+then write idiomatic polars queries for selected problems in leetcode advanced SQL 50 series. 
 """
 import polars as pl
 import pandas as pd
@@ -406,3 +406,68 @@ def continuous_ranges(logs):
     return q.collect()
 
 # print(continuous_ranges(logs))
+
+#------------------------------------------------------------
+#1596** the most frequently ordered products for each customer
+
+data = [[1, 'Alice'], [2, 'Bob'], [3, 'Tom'], [4, 'Jerry'], [5, 'John']]
+customers = pd.DataFrame(data, columns=['customer_id', 'name']).astype({'customer_id':'Int64', 'name':'object'}).pipe(to_polars)
+data = [[1, '2020-07-31', 1, 1], [2, '2020-7-30', 2, 2], [3, '2020-08-29', 3, 3], [4, '2020-07-29', 4, 1], [5, '2020-06-10', 1, 2], [6, '2020-08-01', 2, 1], [7, '2020-08-01', 3, 3], [8, '2020-08-03', 1, 2], [9, '2020-08-07', 2, 3], [10, '2020-07-15', 1, 2]]
+orders = pd.DataFrame(data, columns=['order_id', 'order_date', 'customer_id', 'product_id']).astype({'order_id':'Int64', 'order_date':'datetime64[ns]', 'customer_id':'Int64', 'product_id':'Int64'}).pipe(to_polars)
+data = [[1, 'keyboard', 120], [2, 'mouse', 80], [3, 'screen', 600], [4, 'hard disk', 450]]
+products = pd.DataFrame(data, columns=['product_id', 'product_name', 'price']).astype({'product_id':'Int64', 'product_name':'object', 'price':'Int64'}).pipe(to_polars)
+
+def most_frequent_products(customers, orders, products):
+    q=(
+        orders
+        .group_by("customer_id","product_id").agg(pl.count())
+        .with_columns(
+            pl.col("count").max().over("customer_id").alias("max_count")
+        )
+        .filter(pl.col("count")==pl.col("max_count"))
+        .sort("customer_id")
+        .join(products, on="product_id")
+        .select("customer_id","product_id", "product_name")
+    )
+    return q
+
+# print(most_frequent_products(customers, orders, products))
+
+#------------------------------------------------------------
+#1709** biggest window between visits
+
+data = [['1', '2020-11-28'], ['1', '2020-10-20'], ['1', '2020-12-3'], ['2', '2020-10-5'], ['2', '2020-12-9'], ['3', '2020-11-11']]
+user_visits = pd.DataFrame(data, columns=['user_id', 'visit_date']).astype({'user_id':'Int64', 'visit_date':'datetime64[ns]'}).pipe(to_polars)
+
+def biggest_window(user_visits):
+    arti_visit = user_visits.lazy().select(pl.col("user_id").unique(), pl.date(2021,1,1).alias("visit_date"))
+    q = (
+        pl.concat([user_visits.lazy().with_columns(pl.col("visit_date").cast(pl.Date)), arti_visit])
+        .sort("visit_date")
+        .with_columns(
+            pl.col("visit_date").diff().over("user_id").alias("diff")
+        )
+        .drop_nulls()
+        .group_by("user_id").agg(pl.max("diff"))
+    )
+    return q.collect()
+
+# print(biggest_window(user_visits))
+
+#------------------------------------------------------------
+#1270** all people report to the given manager
+
+data = [[1, 'Boss', 1], [3, 'Alice', 3], [2, 'Bob', 1], [4, 'Daniel', 2], [7, 'Luis', 4], [8, 'John', 3], [9, 'Angela', 8], [77, 'Robert', 1]]
+employees = pd.DataFrame(data, columns=['employee_id', 'employee_name', 'manager_id']).astype({'employee_id':'Int64', 'employee_name':'object', 'manager_id':'Int64'}).pipe(to_polars)
+
+def report_to_manager(employees):
+    q = (
+        employees
+        .join(employees, left_on="manager_id", right_on="employee_id", suffix="_d1")
+        .join(employees, left_on="manager_id_d1", right_on="employee_id",suffix="_d2")
+        .filter((pl.col("manager_id_d2")==1) & (pl.col("employee_id")!=1))
+        .select("employee_name")
+    )
+    return q
+
+# print(report_to_manager(employees))
