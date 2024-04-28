@@ -1,6 +1,6 @@
 # polars ressources
 
-## write idomatic code
+## write idiomatic code
 
 - [official user guide](https://docs.pola.rs/)
 - [official blog](https://pola.rs/posts/)
