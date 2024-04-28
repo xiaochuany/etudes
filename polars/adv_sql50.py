@@ -1,3 +1,6 @@
+"""pipe pandas dataframe to polars dataframe, then use polars to solve queries
+selected problems from leetcode 50 advanced sql problems
+"""
 import polars as pl
 import pandas as pd
 
@@ -314,3 +317,92 @@ def department_highest_salary(employee, department):
     return q
 
 # print(department_highest_salary(employee, department))
+
+#------------------------------------------------------------
+#1532** the most recent three orders
+
+data = [[1, 'Winston'], [2, 'Jonathan'], [3, 'Annabelle'], [4, 'Marwan'], [5, 'Khaled']]
+customers = pd.DataFrame(data, columns=['customer_id', 'name']).astype({'customer_id':'Int64', 'name':'object'}).pipe(to_polars)
+data = [[1, '2020-07-31', 1, 1], [2, '2020-7-30', 2, 2], [3, '2020-08-29', 3, 3], [4, '2020-07-29', 4, 1], [5, '2020-06-10', 1, 2], [6, '2020-08-01', 2, 1], [7, '2020-08-01', 3, 1], [8, '2020-08-03', 1, 2], [9, '2020-08-07', 2, 3], [10, '2020-07-15', 1, 2]]
+orders = pd.DataFrame(data, columns=['order_id', 'order_date', 'customer_id', 'product_id']).astype({'order_id':'Int64', 'order_date':'datetime64[ns]', 'customer_id':'Int64', 'product_id':'Int64'}).pipe(to_polars)   
+
+def most_recent_order(customers, orders):
+    q=(
+        orders.lazy()
+        .with_columns(
+            pl.col("order_date").rank(descending=True).over("customer_id").alias("rank")
+        )
+        .filter(pl.col("rank")<=3)
+        .join(customers.lazy(),on="customer_id")
+        .sort(by=["name","customer_id","order_date"], descending=[False,False,True])
+        .select("name","customer_id","order_id","order_date")
+    )
+    return q.collect()
+
+# print(most_recent_order(customers, orders))
+
+#------------------------------------------------------------
+#1841** maximum transaction each day
+
+data = [[8, '2021-4-3 15:57:28', 57], [9, '2021-4-28 08:47:25', 21], [1, '2021-4-29 13:28:30', 58], [5, '2021-4-28 16:39:59', 40], [6, '2021-4-29 23:39:28', 58]]
+transactions = pd.DataFrame(data, columns=['transaction_id', 'day', 'amount']).astype({'transaction_id':'Int64', 'day':'datetime64[ns]', 'amount':'Int64'}).pipe(to_polars)
+
+def max_transaction(transactions):
+    q = (
+        transactions
+        .with_columns(
+            pl.col("amount").max().over(pl.col("day").dt.date()).alias("max_amount")
+        )
+        .filter(pl.col("max_amount")==pl.col("amount"))
+        .select("transaction_id")
+
+    )
+    return q
+
+# print(max_transaction(transactions))
+
+#------------------------------------------------------------
+#1077** project employees III
+
+data = [[1, 1], [1, 2], [1, 3], [2, 1], [2, 4]]
+project = pd.DataFrame(data, columns=['project_id', 'employee_id']).astype({'project_id':'Int64', 'employee_id':'Int64'}).pipe(to_polars)
+data = [[1, 'Khaled', 3], [2, 'Ali', 2], [3, 'John', 3], [4, 'Doe', 2]]
+employee = pd.DataFrame(data, columns=['employee_id', 'name', 'experience_years']).astype({'employee_id':'Int64', 'name':'object', 'experience_years':'Int64'}).pipe(to_polars)
+
+def project_employees(project, employee):
+    q=(
+        project.join(employee, on="employee_id")
+        .with_columns(
+            pl.col("experience_years").max().over("project_id").alias("max_experience")
+        )
+        .filter(pl.col("experience_years")==pl.col("max_experience"))
+    )
+    return q
+
+# print(project_employees(project, employee))
+
+#------------------------------------------------------------
+#1286** find the start and end number of continuous ranges
+
+data = [[1], [2], [3], [7], [8], [10]]
+logs = pd.DataFrame(data, columns=['log_id']).astype({'log_id':'Int64'}).pipe(to_polars)
+
+def continuous_ranges(logs):
+    q=(
+        logs.lazy()
+        .with_columns(
+            diff=pl.col("log_id").diff(), 
+            id_shift=pl.col("log_id").shift(1)
+            )
+        .filter(
+            (pl.col("diff")!=1) | (pl.col("diff").is_null())
+            )
+        .with_columns(pl.col("id_shift").shift(-1))
+        .select(
+            start=pl.col("log_id"),
+            end=pl.when(pl.col("id_shift").is_null()).then("log_id").otherwise("id_shift"),
+            )
+    )
+    return q.collect()
+
+# print(continuous_ranges(logs))
