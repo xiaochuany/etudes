@@ -8,5 +8,6 @@
 
 ## talks
 
-- [keynote at EuroScipy by the author of polars](https://www.youtube.com/watch?v=GTVm3QyJ-3I&ab_channel=EuroSciPy)
+- [author: EuroScipy 2023](https://www.youtube.com/watch?v=GTVm3QyJ-3I&ab_channel=EuroSciPy)
+- [author: pycon lithuania 2024](https://www.youtube.com/watch?v=GOOYbl3cqlc&ab_channel=PyConLithuania)
 - [work with datetime](https://www.youtube.com/watch?v=Qr0PnDox5MM&ab_channel=PyData)
