@@ -36,3 +36,69 @@ Assigning a variable will create a local variable in the local scope, if the var
 
 - both `for` and `if` can be used in comprehensions. Evaluation order: `for` followed by `if`. 
 - Better only use walrus assignment expressions in `if` part. 
+
+## `yield` over returning a list
+
+- `yield` is more memory efficient than returning a list
+- `yield` can be used to create infinite sequences
+
+
+## what happends when call `for x in foo`?
+
+1. `foo.__iter__()` is called
+2. `__iter__` returns an iterator object
+3. `iter.__next__()` is called repeatedly until `StopIteration` is raised
+
+
+Example:
+```python
+def normalize(nums):
+    if iter(nums) is nums:
+        raise TypeError("Expected a sequence of numbers")
+    s = sum(nums) # call __iter__
+    for i in nums: # another call to __iter__
+        yield i/s
+
+class Visits:
+    def __init__(self, path) -> None:
+        self.path = path
+
+    def __iter__(self):
+        with open(self.path) as f:
+            for line in f:
+                yield int(line)
+
+norm_it = normalize(Visits('file.txt'))
+print(list(norm_it))
+```
+## `yield from` for composing/chaining generators
+
+## avoid `send` and `throw` in generators
+
+a better way to provide exceptional behaviour is to use a class that implements `__iter__` along with method to cause exceptional state transision
+
+## itertools
+
+all takes iterators and returns iterators
+
+### combining
+- `chain`
+- `tee`:  `it1,it2 = itertools.tee(it,2)`
+- `zip_longest`
+- `cycle`
+- `repeat`
+
+### filtering
+- `islice`
+- `takewhile`
+- `dropwhile`
+- `filterfalse`
+
+### transforming
+- `accumulate`: see also `functools.reduce`
+
+### combinations
+- `product`
+- `permutations`
+- `combinations`
+- `combinations_with_replacement`
