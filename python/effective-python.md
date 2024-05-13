@@ -102,3 +102,43 @@ all takes iterators and returns iterators
 - `permutations`
 - `combinations`
 - `combinations_with_replacement`
+
+## implement stateful hooks as callable
+
+Example
+
+```python
+class BetterCountMissing:
+    def __init__(self) -> None:
+        self.added = 0
+
+    def __call__(self):
+        self.added += 1
+        return 0
+current = {'green': 12, 'blue': 3}
+increments = [
+    ('red', 5),
+    ('blue', 17),
+    ('orange', 9),
+]
+counter = BetterCountMissing()
+result = defaultdict(counter, current)
+for key, amount in increments:
+    result[key] += amount
+assert counter.added == 2
+```
+## use @classmethod polymorphism to construct objects
+
+- python only support a single constructor `__init__` per class
+- use `@classmethod` to define alternative constructors
+
+## use `super().__init__` 
+
+the superclasses in diamond inheritance are called only once. The order of classes in the inheritance list matters.
+
+## compose functionality with mix-in
+
+sklearn mix-in classes are good examples
+
+## use collections.abc for custom container types
+
