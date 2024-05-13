@@ -138,7 +138,11 @@ the superclasses in diamond inheritance are called only once. The order of class
 
 ## compose functionality with mix-in
 
-sklearn mix-in classes are good examples
-
 ## use collections.abc for custom container types
 
+https://docs.python.org/3/library/collections.abc.html
+
+to define an abstract base class, use
+`from abc import ABC` and decorator `@abstractmethod` for meothod of subclass of `ABC`
+
+https://docs.python.org/3/library/abc.html
