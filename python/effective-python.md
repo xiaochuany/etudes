@@ -146,3 +146,13 @@ to define an abstract base class, use
 `from abc import ABC` and decorator `@abstractmethod` for meothod of subclass of `ABC`
 
 https://docs.python.org/3/library/abc.html
+
+## @property caveats
+
+- prefer simple public attributes for  new class interfactes
+- use `@property` to define special behaviour if necessary 
+- modify related ojects in the setter not the getter, if necessary at all
+- avoid computation heavy operations and unexpected side effects
+- methods for an attributes can only be shared by subclasses
+
+
