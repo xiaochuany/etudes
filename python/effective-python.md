@@ -153,6 +153,21 @@ https://docs.python.org/3/library/abc.html
 - use `@property` to define special behaviour if necessary 
 - modify related ojects in the setter not the getter, if necessary at all
 - avoid computation heavy operations and unexpected side effects
-- methods for an attributes can only be shared by subclasses
+- the method it decorates cannot be resued for multiple attributes of the same class, nor can it be shared by subclasses
 
 
+
+## descriptors
+
+any object that defines any of the following methods is a descriptor:  
+    - `__get__`  
+    - `__set__`  
+    - `__delete__`  
+
+howto guide: https://docs.python.org/3.8/howto/descriptor.html
+
+
+## prefer class decorators over metaclasses
+
+
+## try except else finally
