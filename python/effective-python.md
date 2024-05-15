@@ -170,4 +170,28 @@ howto guide: https://docs.python.org/3.8/howto/descriptor.html
 ## prefer class decorators over metaclasses
 
 
-## try except else finally
+## use wisely each  block of try except else finally
+
+## contextlib
+
+- use `contextlib.contextmanager` decorator to create context managers
+
+example:
+```python
+import contextlib, logging
+
+@contextlib.contextmanager
+def log_level(level, name):
+    logger = logging.getLogger(name)
+    old_level = logger.getEffectiveLevel()
+    logger.setLevel(level)
+    try:
+        yield logger
+    finally:
+        logger.setLevel(old_level)
+
+with log_level(logging.DEBUG, 'my-log') as logger:
+    logger.debug(f'This is my message for {logger.name}')
+    logging.debug('This will not be printed')
+
+```
