@@ -193,5 +193,9 @@ def log_level(level, name):
 with log_level(logging.DEBUG, 'my-log') as logger:
     logger.debug(f'This is my message for {logger.name}')
     logging.debug('This will not be printed')
-
 ```
+
+## priority queue with `heapq` module
+
+- Analogy:  `list.append` with `heapq.heappush` and `list.pop` with `heapq.heappop` 
+- use `heapq.heapify` to convert a list to a heap in place (or use a for loop with `heapq.heappush`): both linear time
