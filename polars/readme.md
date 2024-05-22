@@ -8,6 +8,7 @@
 
 ## talks
 
-- [author: EuroScipy 2023](https://www.youtube.com/watch?v=GTVm3QyJ-3I&ab_channel=EuroSciPy)
-- [author: pycon lithuania 2024](https://www.youtube.com/watch?v=GOOYbl3cqlc&ab_channel=PyConLithuania)
+- [keynote EuroScipy 2023](https://www.youtube.com/watch?v=GTVm3QyJ-3I&ab_channel=EuroSciPy)
+- [keynote PyCond Eindhoven 2023: polars plugins](https://www.youtube.com/watch?v=jKW-CBV7NUM&t=1011s)
+- [keynote PyCon Lithuania 2024](https://www.youtube.com/watch?v=GOOYbl3cqlc&ab_channel=PyConLithuania)
 - [work with datetime](https://www.youtube.com/watch?v=Qr0PnDox5MM&ab_channel=PyData)
