@@ -1,5 +1,15 @@
 #  effective python
 
+## bytes and str
+
+- use `str` for text data: a sequence of unicode characters, each character is a code point (integer). The python built-in `ord` and `chr` functions can be used to convert between characters and code points.
+- use `bytes` for raw binary data: a sequence of bytes, each byte is an integer in the range 0-255. The python built-in `bytes` and `bytearray` classes can be used to create byte sequences. The `struct` module can be used to convert between bytes and other data types.
+- cannot operate on `str` and `bytes` together
+- use `str.encode` and `bytes.decode` to convert between `str` and `bytes`
+- pass `rb` to `open()` in read binary mode if the  data is binary, `r` for text data such as csv files
+
+
+
 ## dict
 
 - use `dict.get` to provide default values
