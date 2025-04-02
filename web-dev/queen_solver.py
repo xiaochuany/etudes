@@ -2,13 +2,15 @@
 from fasthtml.common import *
 import json # needed for hx_vals
 
-GRID_ROWS = GRID_COLS = 9
 COLORS = ["#FFFFFF", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#CCCCCC", "#FF00FF", "#00FFFF", "#FFA500"] 
 DEFAULT_COLOR = COLORS[0]
 colormap = {color: i for i, color in enumerate(COLORS)}
 mapcolor = {i:color for i, color in enumerate(COLORS)}
 
-grid_state = [[0 for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
+GRID_COLS: int
+GRID_ROWS: int
+grid_state: list
+
 app, rt = fast_app()
 
 def create_cell(row: int, col: int, current_color: str = DEFAULT_COLOR):
@@ -21,15 +23,25 @@ def create_cell(row: int, col: int, current_color: str = DEFAULT_COLOR):
 
 @rt("/")
 def get():
+    size_selector = Group(Input(type="number", name="size", placeholder="choose size"), 
+                          Button("grid!", hx_post="/grid", target_id="grid", hx_include="[name='size']"))
     color_selector = Group(
         H4("Choose Color:"),
         *[Label(
             Input(type="radio", name="selected_color", value=color, checked=(color == DEFAULT_COLOR)),
             Span(style=f"display: inline-block; width: 20px; height: 20px; background-color: {color}; vertical-align: middle;")
             ) for color in COLORS])
+    g = Div(id="grid")
+    return Titled("Queens solver", size_selector, color_selector, g, Button("Solve", hx_get="/solve", hx_swap="outerHTML"))
+
+@rt("/grid")
+def post(size:int):
+    global GRID_COLS, GRID_ROWS, grid_state
+    GRID_ROWS = GRID_COLS = size
+    grid_state = [[0 for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
     grid_table = Table(
         *[Tr(*[create_cell(r, c, mapcolor[grid_state[r][c]]) for c in range(GRID_COLS)]) for r in range(GRID_ROWS)])
-    return Titled("Queens solver", color_selector, grid_table, Button("Solve", hx_get="/solve", hx_swap="outerHTML"))
+    return grid_table
 
 @rt("/color-cell")
 def post(selected_color: str, row: int, col: int):
@@ -38,7 +50,7 @@ def post(selected_color: str, row: int, col: int):
     return create_cell(row, col, current_color=selected_color)
 
 def solve_queens(board, regions, row=0, n=None, cols=None, regions_used=None, last_col=None):
-    """curtosy: deepseek v3"""
+    """courtesy: deepseek v3"""
     if n is None:
         n = len(board)
     if cols is None:
