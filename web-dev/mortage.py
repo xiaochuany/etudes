@@ -18,11 +18,10 @@ def get():
 def put(P:float,r:float,n:int):
     r= r/ 100 / 12
     m = P*r*(1+r)**n / ((1+r)**n - 1)
-    res = Div(
-        H4(f"monthly payment {m:.2f}"), 
-        Ul(
-            Li(f"interest payment {P*r:.2f}"),
-            Li(f"principle payment {m-P*r:.2f}"))) 
+    res = Details(
+        Summary(H3(f"monthly payment {m:.2f}")), 
+        Ul(Li(f"interest payment {P*r:.2f}"), Li(f"principle payment {m-P*r:.2f}")),
+        open=True) 
     return res
 
 serve()
