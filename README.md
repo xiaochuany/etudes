@@ -1,3 +1,8 @@
-# exercise
+# etudes
 
-solve light-weighted exercises in algorithm, data structure, data engineering, and machine learning
+light-weighted exercises  
+
+
+| Date       | File (Link)                  | category | Description                          |
+|------------|-----------------------------------|--------|------------------------------|
+| 2025-04-14 | [mortage calculator](/web-dev/mortage.py)  |  web dev  | fasthtml minimal example |
