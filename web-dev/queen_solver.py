@@ -18,17 +18,17 @@ def create_cell(row: int, col: int, current_color: str = DEFAULT_COLOR):
         style=f"background-color: {current_color}; border: 1px solid black; width: 50px; height: 50px; cursor: pointer;",
         hx_post="/color-cell",
         hx_swap="outerHTML",
-        hx_include="[name='selected_color']:checked", 
+        hx_include="#selected_color:checked", 
         hx_vals=json.dumps({"row": row, "col": col}))
 
 @rt("/")
 def get():
-    size_selector = Group(Input(type="number", name="size", placeholder="choose size"), 
-                          Button("grid!", hx_post="/grid", target_id="grid", hx_include="[name='size']"))
+    size_selector = Grid(Input(type="number", id="size", placeholder="choose size"), 
+                          Button("Show grid", hx_post="/grid", target_id="grid", hx_include="#size"))
     color_selector = Group(
         H4("Choose Color:"),
         *[Label(
-            Input(type="radio", name="selected_color", value=color, checked=(color == DEFAULT_COLOR)),
+            Input(type="radio", id="selected_color", value=color, checked=(color == DEFAULT_COLOR)),
             Span(style=f"display: inline-block; width: 20px; height: 20px; background-color: {color}; vertical-align: middle;")
             ) for color in COLORS])
     g = Div(id="grid")
