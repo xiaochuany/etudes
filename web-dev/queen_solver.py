@@ -13,14 +13,6 @@ grid_state: list
 
 app, rt = fast_app()
 
-def create_cell(row: int, col: int, current_color: str = DEFAULT_COLOR):
-    return Td(Div(id=f"val-{row}-{col}"),
-        style=f"background-color: {current_color}; border: 1px solid black; width: 50px; height: 50px; cursor: pointer;",
-        hx_post="/color-cell",
-        hx_swap="outerHTML",
-        hx_include="#selected_color:checked", 
-        hx_vals=json.dumps({"row": row, "col": col}))
-
 @rt("/")
 def get():
     size_selector = Grid(Input(type="number", id="size", placeholder="choose size"), 
@@ -33,6 +25,14 @@ def get():
             ) for color in COLORS])
     g = Div(id="grid")
     return Titled("Queens solver", size_selector, color_selector, g, Button("Solve", hx_get="/solve", hx_swap="outerHTML"))
+
+def create_cell(row: int, col: int, current_color: str = DEFAULT_COLOR):
+    return Td(Div(id=f"val-{row}-{col}"),
+        style=f"background-color: {current_color}; border: 1px solid black; width: 50px; height: 50px; cursor: pointer;",
+        hx_post="/color-cell",
+        hx_swap="outerHTML",
+        hx_include="#selected_color:checked", 
+        hx_vals=json.dumps({"row": row, "col": col}))
 
 @rt("/grid")
 def post(size:int):
