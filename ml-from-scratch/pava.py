@@ -6,7 +6,7 @@ app = marimo.App(width="medium")
 with app.setup:
     import marimo as mo
     import numpy as np
-    import polars as pl  # Initialization code that runs before all other cells
+    import polars as pl
 
 
 @app.cell
@@ -17,7 +17,7 @@ def _():
 
 @app.cell
 def _():
-    N = mo.ui.slider(1000, 10000)
+    N = mo.ui.slider(1000, 10001)
     N
     return (N,)
 
@@ -37,12 +37,6 @@ def _(raw):
         .qcut(quantiles=np.arange(1, 10) * 0.1, include_breaks=True)
         .alias("qcut")
     ).unnest("qcut")
-    return
-
-
-@app.cell
-def _(raw):
-    np.quantile(a=raw[:, 0], q=np.arange(1, 10) * 0.1)
     return
 
 
@@ -144,6 +138,48 @@ def _(bins, raw):
 
 
 @app.cell
+def _(bins, imap, raw):
+    def main():
+        imap_l = bins.drop("index").to_dicts()
+
+        while len(imap) >= 2:
+            cur, nxt = 0, 1
+            iters = len(imap)
+            print(iters)
+            while nxt < iters:
+                low, high = imap[cur].values()
+                low_, high_ = imap[nxt].values()
+                rate = get_rate(raw, low, high)
+                rate_ = get_rate(raw, low_, high_)
+                # print(rate, rate_, low, high)
+                if rate < rate_:
+                    imap[nxt]["low"] = imap[cur]["low"]
+                    imap.pop(cur)
+                cur, nxt = nxt, nxt + 1
+            _breaks = [
+                v.get("low") for v in imap.values() if v.get("low") > float("-inf")
+            ]
+            _B = (
+                raw.with_columns(
+                    pl.col("A").cut(breaks=_breaks, include_breaks=True).alias("_cut")
+                )
+                .unnest("_cut")
+                .group_by("breakpoint")
+                .agg(pl.mean("B"))
+                .sort("breakpoint")
+                .get_column("B")
+            )
+            # print("checking monotonicity")
+            # print(_B)
+            # print(imap)
+            if _B.is_close(_B.sort(descending=True)).all():
+                break
+            else:
+                imap = dict(enumerate(imap.values()))
+    return
+
+
+@app.cell
 def _(breaks, raw):
     raw.with_columns(
         pl.col("A").cut(breaks=breaks, include_breaks=True).alias("_cut")
@@ -160,6 +196,66 @@ def _(imap):
 @app.cell
 def _(imap):
     imap
+    return
+
+
+@app.function
+def pava(x, constraint=lambda a, b: a[0] / a[1] <= b[0] / b[1]):
+    """x : list of pairs of counts (total, default)"""
+    n = len(x)
+    active_pools = [[i] for i in range(n)]
+    active_values = list(np.asarray(x))
+    traj = [0]
+    i = 0
+    while i < len(active_pools) - 1:
+        if not constraint(active_values[i], active_values[i + 1]):
+            # Violation found, merge pools
+            active_pools[i].extend(active_pools[i + 1])
+            del active_pools[i + 1]
+            active_values[i] = active_values[i] + active_values[i + 1]
+            del active_values[i + 1]
+
+            # Step back to check for new violations with the merged pool
+            if i > 0:
+                i -= 1
+                traj.append(i)
+        else:
+            i += 1
+            traj.append(i)
+
+    return active_pools
+
+
+@app.cell
+def _():
+    pava([[2,10], [1,10],[1,10], [1.5,10],[2, 10]])
+    return
+
+
+@app.cell
+def _():
+    mo.md(
+        r"""
+    ## correctness
+
+    we can decompose the state into two alternating phase
+
+    - either forward merge happens and backtracks and merges until monotonicity is restored
+    - or forward merge does not happen and index advances by 1
+
+    index advancing happens at most n times because the number of indices ahead of the current index stays unchanged during the merge and backtracks phase. everytime we advances index there are less places for the advancement to happen.
+
+    let $b_i$ denote the number of index backtracks in the i-th round of phase 1 (forward merge followed by a number of backward merges). we bound 
+
+    $$
+    \sum_{i}^r b_i  =  r + \sum_{i=1}^r (b_i-1) \le \sharp\{forward merge\}+\sharp\{backward merge\} \le \sharp\{merge\}\le n
+    $$
+
+
+    the bulk of the work is done by the merges which are O(1) operations. there are at most n merges because the total number of merges cannot be larger than the number of data points. 
+
+    """
+    )
     return
 
 

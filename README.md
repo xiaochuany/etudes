@@ -5,6 +5,7 @@ light-weighted exercises
 
 | Date       | File (Link)                  | category | Description                          |
 |------------|-----------------------------------|--------|------------------------------|
+| 2025-08-22 | [pooled adjacent violators algorithm](/ml-from-scratch/pava.py)  |  ML  | for monotonic binning in credit modelling  |
 | 2025-07-15 | [hierarchical clustering](/ml-from-scratch/hierarchical.py)  |  ML  | single linkage in 36 LOC and demo  |
 | 2025-07-08 | [random forest scaling](/2025-07/rfscaling.py)  |  ML  | mini-benchmark  |
 | 2025-04-15 | [queen solver](/web-dev/queen_solver.py)  |  app  | linkedin queens puzzle  |
