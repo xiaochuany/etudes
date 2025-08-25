@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.14.17"
+__generated_with = "0.15.0"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -205,7 +205,7 @@ def pava(x, constraint=lambda a, b: a[0] / a[1] <= b[0] / b[1]):
     n = len(x)
     active_pools = [[i] for i in range(n)]
     active_values = list(np.asarray(x))
-    traj = [0]
+
     i = 0
     while i < len(active_pools) - 1:
         if not constraint(active_values[i], active_values[i + 1]):
@@ -218,17 +218,61 @@ def pava(x, constraint=lambda a, b: a[0] / a[1] <= b[0] / b[1]):
             # Step back to check for new violations with the merged pool
             if i > 0:
                 i -= 1
-                traj.append(i)
         else:
             i += 1
-            traj.append(i)
 
     return active_pools
 
 
+@app.function
+def pavai(x, constraint=lambda a, b: a[0] / a[1] <= b[0] / b[1]):
+    """
+    x: list of pairs of counts, e.g., [(numerator, denominator), ...]
+    
+    This implementation uses a stack-based approach. It is also O(n) but
+    is often cleaner and more intuitive than a linked list.
+    """
+    if not x:
+        return []
+
+    # The stack will store tuples of (value, indices) for each active pool.
+    stack = []
+    
+    # Process each data point one by one.
+    for i, val in enumerate(x):
+        # The new data point starts as its own pool.
+        current_value = np.asarray(val)
+        current_indices = [i]
+        
+        # --- Backwards Merging ---
+        # While the stack is not empty and the top pool violates the constraint
+        # with the current pool, merge them.
+        while stack and not constraint(stack[-1][0], current_value):
+            # Pop the last pool from the stack.
+            prev_value, prev_indices = stack.pop()
+            
+            # Merge it into the current pool.
+            current_value += prev_value
+            current_indices = prev_indices + current_indices # Prepend old indices
+        
+        # Now that all violations are resolved, push the new pool onto the stack.
+        stack.append((current_value, current_indices))
+
+    # --- Finalization: Unpack the stack into the final list of pools ---
+    final_pools = [indices for value, indices in stack]
+        
+    return final_pools
+
+
 @app.cell
 def _():
-    pava([[2,10], [1,10],[1,10], [1.5,10],[2, 10]])
+    pava([[5, 100], [8, 90], [15, 120], [12, 100], [25, 150]])
+    return
+
+
+@app.cell
+def _():
+    pavai([[5, 100], [8, 90], [15, 120], [12, 100], [25, 150]])
     return
 
 
@@ -252,8 +296,7 @@ def _():
     $$
 
 
-    the bulk of the work is done by the merges which are O(1) operations. there are at most n merges because the total number of merges cannot be larger than the number of data points. 
-
+    the bulk of the work is done by the merges which are O(1) operations. there are at most n merges because the total number of merges cannot be larger than the number of data points.
     """
     )
     return
